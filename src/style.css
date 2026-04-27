@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --transition-duration: 0.4s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --card-hover-raise: -10px;
+  --card-hover-scale: 1.015;
+}
+
+html {
+  transition: background-color var(--transition-duration) var(--transition-timing),
+              color var(--transition-duration) var(--transition-timing);
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  background: #050816;
+  color: #f4f7ff;
+  transition:
+    background-color var(--transition-duration) var(--transition-timing),
+    color var(--transition-duration) var(--transition-timing);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+a {
+  color: inherit;
+}
+
+.hover-card {
+  position: relative;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    filter 0.3s ease;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.hover-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 44%),
+    radial-gradient(circle at top right, rgba(109, 120, 255, 0.16), transparent 38%);
+  transition: opacity 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hover-card:hover {
+    transform:
+      translateY(var(--card-hover-raise))
+      scale(var(--card-hover-scale))
+      rotateX(4deg)
+      rotateY(-4deg);
+    border-color: rgba(133, 92, 255, 0.34) !important;
+    box-shadow:
+      0 28px 54px rgba(6, 12, 28, 0.24),
+      0 0 0 1px rgba(133, 92, 255, 0.1);
+    filter: saturate(1.06);
+  }
+
+  .hover-card:hover::after {
+    opacity: 1;
+  }
+}
+
+.light .hover-card:hover {
+  border-color: rgba(109, 120, 255, 0.26) !important;
+  box-shadow:
+    0 24px 44px rgba(104, 123, 176, 0.18),
+    0 0 0 1px rgba(109, 120, 255, 0.08);
+}
+
+.light .hover-card::after {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 44%),
+    radial-gradient(circle at top right, rgba(109, 120, 255, 0.12), transparent 38%);
+}
+
+html.light body,
+body.light {
+  background: #edf3ff;
+  color: #152033;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  transition: background-color var(--transition-duration) var(--transition-timing);
+}
+
+.light ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background-color var(--transition-duration) var(--transition-timing);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
