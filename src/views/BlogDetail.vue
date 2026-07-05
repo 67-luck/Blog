@@ -74,12 +74,13 @@ async function summarizeArticle() {
     });
 
     const data = (await response.json().catch(() => ({}))) as {
+      code?: string;
       error?: string;
       text?: string;
     };
 
     if (!response.ok) {
-      throw new Error(data.error || "AI 总结暂时不可用。");
+      throw new Error([data.error, data.code].filter(Boolean).join(" ") || "AI 总结暂时不可用。");
     }
 
     if (!data.text?.trim()) {

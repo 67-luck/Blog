@@ -14,6 +14,7 @@ interface ChatMessage {
 }
 
 interface AssistantResponse {
+  code?: string;
   error?: string;
   text?: string;
 }
@@ -160,6 +161,21 @@ async function scrollToBottom(behavior: ScrollBehavior = "auto") {
   });
 }
 
+async function readAssistantError(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    const data = (await response.json().catch(() => ({}))) as AssistantResponse;
+    const detail = [data.error, data.code].filter(Boolean).join(" ");
+
+    return detail || `AI 服务请求失败：${response.status}`;
+  }
+
+  const text = await response.text().catch(() => "");
+
+  return text.trim() || `AI 服务请求失败：${response.status}`;
+}
+
 async function sendMessage(text = draft.value) {
   const value = text.trim();
 
@@ -194,6 +210,10 @@ async function sendMessage(text = draft.value) {
           })),
       }),
     });
+
+    if (!response.ok) {
+      throw new Error(await readAssistantError(response));
+    }
 
     let answer = "";
 
