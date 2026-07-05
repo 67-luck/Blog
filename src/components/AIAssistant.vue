@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { blogPosts } from "../data/blog";
-import { notes } from "../data/notes";
+import { notes, studyRoadmap } from "../data/notes";
 import { projects } from "../data/projects";
 import { aboutData } from "../data/resume";
 import { usePlayerStore } from "../stores/player";
@@ -12,8 +13,16 @@ interface ChatMessage {
   text: string;
 }
 
+interface AssistantResponse {
+  error?: string;
+  text?: string;
+}
+
 const playerStore = usePlayerStore();
+const route = useRoute();
+
 const isOpen = ref(false);
+const isThinking = ref(false);
 const draft = ref("");
 const scrollRef = ref<HTMLElement | null>(null);
 const messageId = ref(1);
@@ -22,11 +31,30 @@ const messages = ref<ChatMessage[]>([
   {
     id: 0,
     role: "assistant",
-    text: "我是站内 AI 助手。你可以直接问我项目、笔记、文章、联系方式，或者让我帮你查当前歌曲。",
+    text: "我是站内 AI 助手。你可以问我项目、笔记、文章、联系方式，或者让我结合当前页面帮你整理内容。",
   },
 ]);
 
-const quickReplies = computed(() => ["查项目", "查笔记", "查文章", "联系方式"]);
+const quickReplies = computed(() => ["介绍项目", "总结文章", "学习笔记", "联系方式"]);
+
+const currentPageHint = computed(() => {
+  const currentPost = blogPosts.find((item) => route.path.includes(`/blog/${item.id}`));
+
+  if (currentPost) {
+    return `博客详情页 / ${currentPost.title}`;
+  }
+
+  const pageMap: Record<string, string> = {
+    "/": "首页",
+    "/projects": "项目页",
+    "/notes": "笔记页",
+    "/blog": "文章列表页",
+    "/music": "音乐页",
+    "/about": "关于我页",
+  };
+
+  return pageMap[route.path] ?? route.path;
+});
 
 function pushMessage(role: ChatMessage["role"], text: string) {
   messages.value.push({
@@ -37,143 +65,90 @@ function pushMessage(role: ChatMessage["role"], text: string) {
   messageId.value += 1;
 }
 
-function normalize(value: string) {
-  return value.trim().toLowerCase();
+function replaceMessage(id: number, text: string) {
+  const message = messages.value.find((item) => item.id === id);
+
+  if (message) {
+    message.text = text;
+  }
 }
 
-function extractKeyword(value: string, pattern: RegExp) {
-  return normalize(value.replace(pattern, ""));
-}
+function buildSiteContext() {
+  const projectContext = projects
+    .map((item) =>
+      [
+        `项目：${item.name}`,
+        `周期：${item.period}`,
+        `类型：${item.type}`,
+        `简介：${item.summary}`,
+        `职责：${item.role}`,
+        `技术栈：${item.techStack.join(" / ")}`,
+        `亮点：${item.highlights.join("；")}`,
+        `链接：${item.links.map((link) => `${link.label} ${link.url}`).join(" / ")}`,
+      ].join("\n"),
+    )
+    .join("\n\n");
 
-function formatResults(
-  title: string,
-  items: Array<{
-    title: string;
-    summary: string;
-    extra?: string;
-  }>,
-  emptyText: string,
-) {
-  if (!items.length) {
-    return emptyText;
-  }
+  const noteContext = notes
+    .map((item) =>
+      [
+        `笔记：${item.title}`,
+        `分类：${item.category}`,
+        `更新时间：${item.updatedAt}`,
+        `摘要：${item.summary}`,
+        `标签：${item.tags.join(" / ")}`,
+        `语雀：${item.yuqueUrl}`,
+      ].join("\n"),
+    )
+    .join("\n\n");
 
-  return `${title}\n${items
-    .slice(0, 4)
-    .map((item) => `- ${item.title}${item.extra ? `（${item.extra}）` : ""}\n  ${item.summary}`)
-    .join("\n")}`;
-}
+  const blogContext = blogPosts
+    .map((item) =>
+      [
+        `文章：${item.title}`,
+        `日期：${item.date}`,
+        `摘要：${item.summary}`,
+        `标签：${item.tags.join(" / ")}`,
+        `正文摘录：${item.content.slice(0, 1200)}`,
+      ].join("\n"),
+    )
+    .join("\n\n");
 
-function searchProjects(keyword: string) {
-  const q = extractKeyword(keyword, /帮我|帮忙|查找|搜索|看看|一下|关于|项目|作品|的|吧|呀|啊|查/g);
+  const roadmapContext = studyRoadmap
+    .map((item) => `${item.phase}：${item.period}，重点 ${item.focus}，产出 ${item.outcome}`)
+    .join("\n");
 
-  return (q ? projects : projects.slice(0, 3)).filter((item) =>
-    [item.name, item.summary, item.role, ...item.techStack, ...item.highlights]
-      .join(" ")
-      .toLowerCase()
-      .includes(q),
-  );
-}
+  const track = playerStore.currentTrack;
 
-function searchNotes(keyword: string) {
-  const q = extractKeyword(
-    keyword,
-    /帮我|帮忙|查找|搜索|看看|一下|关于|笔记|学习|的|吧|呀|啊|查/g,
-  );
-
-  return (q ? notes : notes.slice(0, 4)).filter((item) =>
-    [item.title, item.summary, item.category, ...item.tags].join(" ").toLowerCase().includes(q),
-  );
-}
-
-function searchArticles(keyword: string) {
-  const q = extractKeyword(
-    keyword,
-    /帮我|帮忙|查找|搜索|看看|一下|关于|文章|博客|复盘|的|吧|呀|啊|查/g,
-  );
-
-  return (q ? blogPosts : blogPosts.slice(0, 3)).filter((item) =>
-    [item.title, item.summary, ...item.tags].join(" ").toLowerCase().includes(q),
-  );
-}
-
-function replyFor(query: string) {
-  const text = normalize(query);
-
-  if (!text) {
-    return "可以直接输入关键词，比如“Vue”“播放器”“项目”“联系方式”。";
-  }
-
-  if (/(联系|邮箱|qq|github)/.test(text)) {
-    return `联系我可以用这两个方式：\n- QQ 邮箱：${aboutData.contact.email}\n- GitHub：${aboutData.contact.github}`;
-  }
-
-  if (/(音乐|歌曲|歌单|播放|正在听|当前歌曲)/.test(text)) {
-    return `当前播放：${playerStore.currentTrack.title} - ${playerStore.currentTrack.artist}\n来源：${playerStore.currentTrack.sourceUrl}`;
-  }
-
-  if (/(项目|作品)/.test(text)) {
-    return formatResults(
-      "我帮你找到这些项目：",
-      searchProjects(text).map((item) => ({
-        title: item.name,
-        summary: item.summary,
-        extra: item.period,
-      })),
-      "没有找到匹配的项目。你可以试试输入 Vue、后台、博客、工程化 这类关键词。",
-    );
-  }
-
-  if (/(笔记|学习|vue|javascript|typescript|webpack|axios|node)/.test(text)) {
-    return formatResults(
-      "这些笔记和你的关键词最接近：",
-      searchNotes(text).map((item) => ({
-        title: item.title,
-        summary: item.summary,
-        extra: item.category,
-      })),
-      "没有找到匹配的笔记。你可以试试 Vue、JavaScript、TypeScript、工程化 这些词。",
-    );
-  }
-
-  if (/(文章|博客|复盘|播放器|状态|架构)/.test(text)) {
-    return formatResults(
-      "这些文章和你的关键词最接近：",
-      searchArticles(text).map((item) => ({
-        title: item.title,
-        summary: item.summary,
-        extra: item.date,
-      })),
-      "没有找到匹配的文章。你可以试试 首页、播放器、复盘、架构 这些词。",
-    );
-  }
-
-  const globalMatches = [
-    ...projects.map((item) => ({
-      type: "项目",
-      title: item.name,
-      summary: item.summary,
-    })),
-    ...notes.map((item) => ({
-      type: "笔记",
-      title: item.title,
-      summary: item.summary,
-    })),
-    ...blogPosts.map((item) => ({
-      type: "文章",
-      title: item.title,
-      summary: item.summary,
-    })),
-  ].filter((item) => `${item.title} ${item.summary}`.toLowerCase().includes(text));
-
-  if (globalMatches.length) {
-    return `我查到这些站内内容：\n${globalMatches
-      .slice(0, 5)
-      .map((item) => `- [${item.type}] ${item.title}`)
-      .join("\n")}`;
-  }
-
-  return "我目前只做站内对话和内容查找。你可以问我项目、笔记、文章、联系方式或当前歌曲。";
+  return [
+    "个人信息",
+    `姓名：${aboutData.name}`,
+    `定位：${aboutData.role}`,
+    `状态：${aboutData.status}`,
+    `简介：${aboutData.summary}`,
+    `经历：${aboutData.bio.join(" ")}`,
+    `核心优势：${aboutData.strengths.join(" ")}`,
+    `工作方式：${aboutData.workStyle.join(" ")}`,
+    `技能：${aboutData.skillGroups.map((group) => `${group.title}：${group.items.join(" / ")}`).join("；")}`,
+    `联系方式：电话 ${aboutData.contact.phone}，邮箱 ${aboutData.contact.email}，GitHub ${aboutData.contact.github}，博客 ${aboutData.contact.blog}，语雀 ${aboutData.contact.yuque}`,
+    "",
+    "当前音乐",
+    `当前播放：${track.title} - ${track.artist}`,
+    `专辑：${track.album}`,
+    `来源：${track.sourceUrl}`,
+    "",
+    "学习路线",
+    roadmapContext,
+    "",
+    "项目资料",
+    projectContext,
+    "",
+    "笔记资料",
+    noteContext,
+    "",
+    "文章资料",
+    blogContext,
+  ].join("\n");
 }
 
 async function scrollToBottom(behavior: ScrollBehavior = "auto") {
@@ -188,14 +163,78 @@ async function scrollToBottom(behavior: ScrollBehavior = "auto") {
 async function sendMessage(text = draft.value) {
   const value = text.trim();
 
-  if (!value) {
+  if (!value || isThinking.value) {
     return;
   }
 
   pushMessage("user", value);
   draft.value = "";
-  pushMessage("assistant", replyFor(value));
+  isThinking.value = true;
+
+  const thinkingId = messageId.value;
+  pushMessage("assistant", "正在思考中...");
   await scrollToBottom("smooth");
+
+  try {
+    const response = await fetch("/api/assistant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stream: true,
+        pageHint: currentPageHint.value,
+        siteContext: buildSiteContext(),
+        messages: messages.value
+          .filter((message) => message.id !== thinkingId)
+          .slice(-10)
+          .map((message) => ({
+            role: message.role,
+            text: message.text,
+          })),
+      }),
+    });
+
+    let answer = "";
+
+    if (response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        answer += decoder.decode(value, { stream: true });
+        replaceMessage(thinkingId, answer || "正在思考中...");
+        await scrollToBottom();
+      }
+
+      answer += decoder.decode();
+    } else {
+      const data = (await response.json().catch(() => ({}))) as AssistantResponse;
+      answer = data.text || data.error || "";
+    }
+
+    if (!answer.trim()) {
+      answer = response.ok ? "AI 助手暂时没有生成内容，请再试一次。" : "AI 服务当前波动，请稍后再试。";
+    }
+
+    replaceMessage(thinkingId, answer.trim());
+  } catch (error) {
+    replaceMessage(
+      thinkingId,
+      error instanceof Error
+        ? `AI 助手连接失败：${error.message}`
+        : "AI 助手连接失败，请稍后再试。",
+    );
+  } finally {
+    isThinking.value = false;
+    await scrollToBottom("smooth");
+  }
 }
 
 watch(
@@ -212,10 +251,10 @@ watch(
       <section v-if="isOpen" class="assistant-panel">
         <div class="panel-top">
           <div>
-            <p class="panel-title">🤖 AI 助手</p>
-            <p class="panel-subtitle">只做站内问答和内容查找</p>
+            <p class="panel-title">AI 助手</p>
+            <p class="panel-subtitle">已接入大模型，可结合站内内容回答</p>
           </div>
-          <button class="panel-close" type="button" @click="isOpen = false">×</button>
+          <button class="panel-close" type="button" @click="isOpen = false">x</button>
         </div>
 
         <div ref="scrollRef" class="message-list">
@@ -234,6 +273,7 @@ watch(
             v-for="reply in quickReplies"
             :key="reply"
             type="button"
+            :disabled="isThinking"
             @click="sendMessage(reply)"
           >
             {{ reply }}
@@ -244,18 +284,21 @@ watch(
           <input
             v-model="draft"
             type="text"
-            placeholder="输入你想查找的内容"
+            :disabled="isThinking"
+            placeholder="输入你想问的内容"
             @keydown.enter.prevent="sendMessage()"
           />
-          <button type="button" @click="sendMessage()">发送</button>
+          <button type="button" :disabled="isThinking" @click="sendMessage()">
+            {{ isThinking ? "等待" : "发送" }}
+          </button>
         </div>
       </section>
     </transition>
 
     <button class="assistant-trigger" type="button" @click="isOpen = !isOpen">
-      <span>🤖</span>
+      <span>AI</span>
       <strong>AI 助手</strong>
-      <small>站内对话</small>
+      <small>大模型对话</small>
     </button>
   </div>
 </template>
@@ -365,6 +408,13 @@ watch(
   cursor: pointer;
 }
 
+.quick-list button:disabled,
+.composer button:disabled,
+.composer input:disabled {
+  opacity: 0.64;
+  cursor: wait;
+}
+
 .composer {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -409,7 +459,8 @@ watch(
 }
 
 .assistant-trigger span {
-  font-size: 1.55rem;
+  font-size: 1.05rem;
+  font-weight: 900;
 }
 
 .assistant-trigger strong {

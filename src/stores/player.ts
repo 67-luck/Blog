@@ -5,7 +5,7 @@ import { musicTracks, playlistMeta, type MusicTrack } from "../data/music";
 const fallbackTrack: MusicTrack = {
   id: 0,
   title: "等待播放",
-  artist: "Luck67 Playlist",
+  artist: "王浩的歌单",
   album: "NetEase Cloud Music",
   coverUrl:
     "https://p1.music.126.net/eKyQ97HJprWjcIYKfXAbqA==/109951172214310562.jpg",

@@ -10,11 +10,15 @@ npm run dev
 
 ## AI Summary
 
-博客详情页支持调用大模型总结当前文章，默认按 LongCat 的 OpenAI 兼容接口发起请求。
-如果粘贴公开语雀链接，服务端会先抓取正文，再把提取结果发给 LongCat 总结。
+博客详情页和悬浮 AI 助手都会调用 `/api/assistant`，服务端按 OpenAI 兼容接口转发请求。
+如果粘贴公开语雀链接，服务端会先抓取正文，再把提取结果发给大模型总结。
 
 推荐配置：
 
+- `AI_API_BASE_URL`
+- `AI_API_KEY`
+- `AI_MODEL`
+- `DEEPSEEK_API_KEY`
 - `VITE_LONGCAT_BASE_URL`
 - `VITE_LONGCAT_API_KEY`
 - `VITE_LONGCAT_MODEL`
@@ -30,5 +34,8 @@ npm run dev
 - `AI_MODEL`
 - `LONGCAT_API_BASE_URL`
 - `AI_API_BASE_URL`
+- `DEEPSEEK_API_BASE_URL`
+- `DEEPSEEK_MODEL`
 
-默认模型是 `LongCat-Flash-Chat`，默认基地址是 `https://api.longcat.chat/openai`。
+默认主模型是 `Qwen/Qwen3.6-35B-A3B`，默认主基地址是 `https://api.siliconflow.cn`。
+如果配置了 `DEEPSEEK_API_KEY`，服务端会在主模型失败、空返回或流式无内容时自动切到 DeepSeek，默认兜底模型是 `deepseek-chat`。

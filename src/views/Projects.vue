@@ -21,7 +21,7 @@ const filteredProjects = computed(() => {
     <PageHero
       eyebrow="Projects"
       title="项目经历"
-      description="每个项目都按简介、角色、技术栈和亮点拆开整理，方便快速讲清楚项目目标、难点和解决方式。"
+      description="围绕实习项目、上线经验和 AI 全栈实践整理，按项目背景、我的职责、技术栈、核心功能与难点展开，方便面试时快速讲清真实贡献。"
     />
 
     <div class="filters">
@@ -48,8 +48,15 @@ const filteredProjects = computed(() => {
         </div>
 
         <h2>{{ project.name }}</h2>
-        <p class="summary">{{ project.summary }}</p>
-        <p class="role">{{ project.role }}</p>
+        <div class="block compact-block">
+          <strong>项目简介</strong>
+          <p class="summary">{{ project.summary }}</p>
+        </div>
+
+        <div class="block compact-block">
+          <strong>我的职责</strong>
+          <p class="role">{{ project.role }}</p>
+        </div>
 
         <div class="block">
           <strong>项目技术栈</strong>
@@ -59,7 +66,7 @@ const filteredProjects = computed(() => {
         </div>
 
         <div class="block">
-          <strong>项目亮点</strong>
+          <strong>核心功能与难点</strong>
           <ul>
             <li v-for="item in project.highlights" :key="item">{{ item }}</li>
           </ul>
@@ -121,11 +128,25 @@ const filteredProjects = computed(() => {
 }
 
 .project-card {
+  position: relative;
+  overflow: hidden;
   padding: 24px;
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(12, 17, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 42%),
+    rgba(12, 17, 34, 0.56);
   backdrop-filter: blur(18px);
+}
+
+.project-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #37c9a7, #6d78ff, #835cff);
 }
 
 .card-top {
@@ -139,6 +160,14 @@ const filteredProjects = computed(() => {
 .summary,
 .role {
   color: rgba(248, 251, 255, 0.72);
+}
+
+.card-top span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(55, 201, 167, 0.12);
+  color: #b7ffeb;
+  font-size: 0.78rem;
 }
 
 .project-card h2 {
@@ -158,6 +187,12 @@ const filteredProjects = computed(() => {
 
 .block {
   margin-top: 18px;
+}
+
+.compact-block {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .block strong {
@@ -180,9 +215,28 @@ const filteredProjects = computed(() => {
 }
 
 ul {
+  display: grid;
+  gap: 10px;
   margin: 0;
-  padding-left: 1.15rem;
-  line-height: 1.8;
+  padding-left: 0;
+  list-style: none;
+  line-height: 1.75;
+}
+
+li {
+  position: relative;
+  padding-left: 18px;
+}
+
+li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #37c9a7, #6d78ff);
 }
 
 .link-row {
@@ -197,7 +251,14 @@ ul {
   align-items: center;
   color: inherit;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.link-row a:first-child {
+  border-color: rgba(55, 201, 167, 0.22);
+  background:
+    linear-gradient(135deg, rgba(55, 201, 167, 0.2), rgba(109, 120, 255, 0.16));
 }
 
 :global(.light) .page-shell {
@@ -206,7 +267,9 @@ ul {
 
 :global(.light) .project-card {
   border-color: rgba(75, 95, 146, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.68)),
+    rgba(255, 255, 255, 0.72);
 }
 
 :global(.light) .card-top span,
@@ -219,6 +282,20 @@ ul {
 :global(.light) .filters button,
 :global(.light) .link-row a {
   background: rgba(75, 95, 146, 0.08);
+}
+
+:global(.light) .compact-block {
+  background: rgba(75, 95, 146, 0.07);
+}
+
+:global(.light) .card-top span {
+  background: rgba(55, 169, 145, 0.12);
+  color: #087864;
+}
+
+:global(.light) .link-row a:first-child {
+  border-color: rgba(55, 169, 145, 0.18);
+  background: rgba(55, 169, 145, 0.1);
 }
 
 :global(.light) .tag-row span {

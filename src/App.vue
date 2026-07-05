@@ -26,7 +26,7 @@ const menuItems = [
 ];
 
 const statusText = computed(() =>
-  themeStore.isDark ? "Open to Work" : "Frontend Portfolio",
+  themeStore.isDark ? "前端实习 · 随时到岗" : "王浩 · 前端作品集",
 );
 
 const headerVisible = ref(true);
@@ -77,11 +77,11 @@ onBeforeUnmount(() => {
     <header class="site-header" :class="{ hidden: !headerVisible }">
       <button class="brand" type="button" @click="router.push('/')">
         <span class="brand-mark">
-          <img v-if="avatarSrc" :src="avatarSrc" alt="Luck67 avatar" class="brand-avatar" />
-          <span v-else>L</span>
+          <img v-if="avatarSrc" :src="avatarSrc" alt="王浩头像" class="brand-avatar" />
+          <span v-else>王</span>
         </span>
         <span class="brand-copy">
-          <strong>Luck67</strong>
+          <strong>王浩</strong>
         </span>
       </button>
 
@@ -143,10 +143,12 @@ onBeforeUnmount(() => {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 18px;
-  padding: 14px 18px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 14, 30, 0.56);
+  padding: 12px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 55%),
+    rgba(10, 14, 30, 0.62);
   backdrop-filter: blur(20px);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
   transition: transform 0.28s ease, opacity 0.28s ease;
@@ -174,13 +176,15 @@ onBeforeUnmount(() => {
 }
 
 .brand-mark {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 16px;
   display: grid;
   place-items: center;
   font-weight: 700;
-  background: linear-gradient(135deg, #6f87ff, #37c9a7);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.45), transparent 28%),
+    linear-gradient(135deg, #37c9a7, #6f87ff);
   color: #fff;
   box-shadow: 0 12px 26px rgba(74, 127, 255, 0.28);
   overflow: hidden;
@@ -218,14 +222,16 @@ onBeforeUnmount(() => {
 .status-pill {
   padding: 9px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(55, 201, 167, 0.12);
+  border: 1px solid rgba(55, 201, 167, 0.18);
+  color: #c9fff0;
   font-size: 0.82rem;
 }
 
 .app-shell.light .status-pill {
-  background: rgba(72, 96, 164, 0.08);
-  border-color: rgba(72, 96, 164, 0.12);
+  background: rgba(55, 169, 145, 0.1);
+  border-color: rgba(55, 169, 145, 0.14);
+  color: #087864;
 }
 
 .switch {

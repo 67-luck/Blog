@@ -34,6 +34,15 @@ function createJsonResponse(res: ServerResponse) {
       res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.end(JSON.stringify(payload));
     },
+    setHeader(name: string, value: string) {
+      res.setHeader(name, value);
+    },
+    write(chunk: string) {
+      res.write(chunk);
+    },
+    end(chunk?: string) {
+      res.end(chunk);
+    },
   };
 }
 

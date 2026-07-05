@@ -12,8 +12,13 @@
 :root {
   --transition-duration: 0.4s;
   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
-  --card-hover-raise: -10px;
-  --card-hover-scale: 1.015;
+  --card-hover-raise: -6px;
+  --card-hover-scale: 1.008;
+  --accent-blue: #6d78ff;
+  --accent-violet: #835cff;
+  --accent-green: #37c9a7;
+  --surface-dark: rgba(12, 17, 34, 0.58);
+  --surface-border: rgba(255, 255, 255, 0.12);
 }
 
 html {
@@ -85,8 +90,9 @@ a {
   pointer-events: none;
   opacity: 0;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 44%),
-    radial-gradient(circle at top right, rgba(109, 120, 255, 0.16), transparent 38%);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 42%),
+    radial-gradient(circle at top right, rgba(55, 201, 167, 0.14), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(109, 120, 255, 0.12), transparent 36%);
   transition: opacity 0.3s ease;
 }
 
@@ -94,13 +100,11 @@ a {
   .hover-card:hover {
     transform:
       translateY(var(--card-hover-raise))
-      scale(var(--card-hover-scale))
-      rotateX(4deg)
-      rotateY(-4deg);
-    border-color: rgba(133, 92, 255, 0.34) !important;
+      scale(var(--card-hover-scale));
+    border-color: rgba(55, 201, 167, 0.3) !important;
     box-shadow:
-      0 28px 54px rgba(6, 12, 28, 0.24),
-      0 0 0 1px rgba(133, 92, 255, 0.1);
+      0 22px 48px rgba(6, 12, 28, 0.28),
+      0 0 0 1px rgba(55, 201, 167, 0.08);
     filter: saturate(1.06);
   }
 
@@ -110,16 +114,64 @@ a {
 }
 
 .light .hover-card:hover {
-  border-color: rgba(109, 120, 255, 0.26) !important;
+  border-color: rgba(55, 169, 145, 0.26) !important;
   box-shadow:
     0 24px 44px rgba(104, 123, 176, 0.18),
-    0 0 0 1px rgba(109, 120, 255, 0.08);
+    0 0 0 1px rgba(55, 169, 145, 0.08);
 }
 
 .light .hover-card::after {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 44%),
-    radial-gradient(circle at top right, rgba(109, 120, 255, 0.12), transparent 38%);
+    radial-gradient(circle at top right, rgba(55, 169, 145, 0.12), transparent 38%);
+}
+
+.primary-btn,
+.link-btn,
+.control-row button,
+.filters button,
+.link-row a {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.primary-btn::after,
+.link-btn::after,
+.control-row button::after,
+.filters button::after,
+.link-row a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: translateX(-110%);
+  transition: opacity 0.25s ease, transform 0.45s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primary-btn:hover,
+  .link-btn:hover,
+  .control-row button:hover,
+  .filters button:hover,
+  .link-row a:hover {
+    transform: translateY(-2px);
+  }
+
+  .primary-btn:hover::after,
+  .link-btn:hover::after,
+  .control-row button:hover::after,
+  .filters button:hover::after,
+  .link-row a:hover::after {
+    opacity: 1;
+    transform: translateX(110%);
+  }
 }
 
 html.light body,

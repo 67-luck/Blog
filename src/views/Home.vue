@@ -28,6 +28,16 @@ const footerLinks = [
   { label: "文章", path: "/blog" },
   { label: "音乐", path: "/music" },
 ];
+const internshipPoints = [
+  "参与已上线壁纸小程序迭代，负责推荐、分类、我的等核心模块。",
+  "搭建壁纸后台管理系统，落地动态路由、按钮权限、CRUD 和图片上传。",
+  "独立维护个人 AI 博客，完成前端页面、Node.js 服务、AI API 和 Vercel 部署。",
+];
+const quickFacts = [
+  { label: "学校专业", value: "重庆移通学院 · 计算机科学与技术" },
+  { label: "实习公司", value: "福州仓山五米信息技术有限公司" },
+  { label: "实习时间", value: "2025/03 - 2025/09" },
+];
 
 function handleSeek(event: Event) {
   playerStore.seek(Number((event.target as HTMLInputElement).value));
@@ -74,7 +84,7 @@ const lyricPreview = computed(() => {
       <section class="hero">
         <article class="hero-card intro-card hover-card">
           <SparklesText
-            text="Welcome to My Blog"
+            text="Frontend Intern Portfolio"
             :colors="{ first: '#88d4ff', second: '#ff9dcf' }"
             :sparkles-count="12"
             class="welcome-text"
@@ -84,6 +94,9 @@ const lyricPreview = computed(() => {
             <AvatarUploader />
 
             <div class="identity-copy">
+              <div class="hero-status-row">
+                <span>{{ aboutData.status }}</span>
+              </div>
               <h1>{{ aboutData.name }}</h1>
               <h2>{{ aboutData.role }}</h2>
             </div>
@@ -99,6 +112,13 @@ const lyricPreview = computed(() => {
                 @click="router.push('/projects')"
               >
                 查看项目
+              </button>
+              <button
+                type="button"
+                class="link-btn cta-secondary"
+                @click="router.push('/notes')"
+              >
+                技术笔记
               </button>
             </div>
 
@@ -153,9 +173,117 @@ const lyricPreview = computed(() => {
           </div>
         </article>
 
+        <article class="hero-card career-card hover-card">
+          <div class="career-top">
+            <p class="eyebrow">Internship</p>
+            <span>{{ aboutData.status }}</span>
+          </div>
+
+          <h3>6 个月前端实习，把项目从开发推进到上线</h3>
+          <p class="career-summary">
+            实习内容覆盖 UniApp 小程序、Vue3 后台管理系统和 AI 博客全栈实践，重点展示真实业务里的页面开发、接口联调、权限控制、上传处理和部署能力。
+          </p>
+
+          <div class="fact-list">
+            <div v-for="fact in quickFacts" :key="fact.label">
+              <span>{{ fact.label }}</span>
+              <strong>{{ fact.value }}</strong>
+            </div>
+          </div>
+
+          <ul class="career-list">
+            <li v-for="item in internshipPoints" :key="item">{{ item }}</li>
+          </ul>
+
+          <div class="career-actions">
+            <button type="button" class="primary-btn" @click="router.push('/projects')">
+              看实习项目
+            </button>
+            <button type="button" class="link-btn" @click="router.push('/about')">
+              查看关于我
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Tech Stack</p>
+            <h2>我能稳定输出的前端能力</h2>
+          </div>
+          <button type="button" class="link-btn" @click="router.push('/about')">
+            查看完整介绍
+          </button>
+        </div>
+
+        <div class="skills-grid">
+          <article
+            v-for="group in aboutData.skillGroups"
+            :key="group.title"
+            class="skill-card hover-card"
+          >
+            <h3>{{ group.title }}</h3>
+            <div class="chip-row">
+              <span v-for="item in group.items" :key="item">{{ item }}</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Projects</p>
+            <h2>围绕实习与上线项目讲清能力</h2>
+          </div>
+          <button
+            type="button"
+            class="link-btn"
+            @click="router.push('/projects')"
+          >
+            全部项目
+          </button>
+        </div>
+
+        <div class="projects-grid">
+          <article
+            v-for="project in featuredProjects"
+            :key="project.id"
+            class="project-card hover-card"
+          >
+            <div class="project-top">
+              <span>{{ project.type }}</span>
+              <small>{{ project.period }}</small>
+            </div>
+            <h3>{{ project.name }}</h3>
+            <p>{{ project.summary }}</p>
+            <div class="chip-row">
+              <span v-for="tech in project.techStack" :key="tech">{{
+                tech
+              }}</span>
+            </div>
+            <ul class="highlight-list">
+              <li
+                v-for="(item, itemIndex) in project.highlights.slice(0, 3)"
+                :key="item"
+                :style="{ '--item-index': String(itemIndex + 1) }"
+              >
+                {{ item }}
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="lyric-stage">
+        <LyricTickerBar />
+      </section>
+
+      <section class="section-block music-resume-block">
         <article class="hero-card player-card hover-card">
           <div class="player-top">
-            <p class="eyebrow">Now Playing</p>
+            <p class="eyebrow">Music</p>
             <button
               type="button"
               class="link-btn"
@@ -214,76 +342,6 @@ const lyricPreview = computed(() => {
             {{ playerStore.errorMessage }}
           </p>
         </article>
-      </section>
-
-      <section class="section-block">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Tech Stack</p>
-            <h2>我能稳定输出的前端能力</h2>
-          </div>
-          <button type="button" class="link-btn" @click="router.push('/about')">
-            查看完整介绍
-          </button>
-        </div>
-
-        <div class="skills-grid">
-          <article
-            v-for="group in aboutData.skillGroups"
-            :key="group.title"
-            class="skill-card hover-card"
-          >
-            <h3>{{ group.title }}</h3>
-            <div class="chip-row">
-              <span v-for="item in group.items" :key="item">{{ item }}</span>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="section-block">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Projects</p>
-            <h2>项目不只写技术栈，更讲清亮点</h2>
-          </div>
-          <button
-            type="button"
-            class="link-btn"
-            @click="router.push('/projects')"
-          >
-            全部项目
-          </button>
-        </div>
-
-        <div class="projects-grid">
-          <article
-            v-for="project in featuredProjects"
-            :key="project.id"
-            class="project-card hover-card"
-          >
-            <div class="project-top">
-              <span>{{ project.type }}</span>
-              <small>{{ project.period }}</small>
-            </div>
-            <h3>{{ project.name }}</h3>
-            <p>{{ project.summary }}</p>
-            <div class="chip-row">
-              <span v-for="tech in project.techStack" :key="tech">{{
-                tech
-              }}</span>
-            </div>
-            <ul class="highlight-list">
-              <li v-for="item in project.highlights.slice(0, 3)" :key="item">
-                {{ item }}
-              </li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section class="lyric-stage">
-        <LyricTickerBar />
       </section>
 
       <section class="section-block split-grid">
@@ -389,14 +447,32 @@ const lyricPreview = computed(() => {
 .skill-card,
 .project-card,
 .content-card {
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(12, 17, 34, 0.5);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 44%),
+    rgba(12, 17, 34, 0.56);
   backdrop-filter: blur(18px);
-  box-shadow: 0 18px 48px rgba(5, 10, 24, 0.18);
+  box-shadow: 0 18px 48px rgba(5, 10, 24, 0.2);
+}
+
+.intro-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #37c9a7, #6d78ff, #ff9dcf);
 }
 
 .intro-card,
+.career-card,
 .player-card,
 .content-card {
   padding: 28px;
@@ -423,6 +499,28 @@ const lyricPreview = computed(() => {
 
 .identity-copy {
   min-width: 0;
+}
+
+.hero-status-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.hero-status-row span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(248, 251, 255, 0.78);
+  font-size: 0.78rem;
+}
+
+.hero-status-row span:first-child {
+  border-color: rgba(55, 201, 167, 0.28);
+  background: rgba(55, 201, 167, 0.13);
+  color: #b7ffeb;
 }
 
 .identity-copy h1 {
@@ -462,24 +560,24 @@ const lyricPreview = computed(() => {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
 }
 
 .contact-btn {
-  width: 88px;
-  height: 88px;
+  width: 56px;
+  height: 56px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: linear-gradient(
     180deg,
-    rgba(71, 80, 116, 0.36),
-    rgba(45, 52, 78, 0.32)
+    rgba(71, 80, 116, 0.42),
+    rgba(45, 52, 78, 0.34)
   );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 16px 34px rgba(0, 0, 0, 0.2);
+    0 12px 24px rgba(0, 0, 0, 0.18);
   color: #eef3ff;
   cursor: pointer;
   transition: transform 0.22s ease, border-color 0.22s ease,
@@ -497,8 +595,8 @@ const lyricPreview = computed(() => {
 }
 
 .contact-btn svg {
-  width: 34px;
-  height: 34px;
+  width: 25px;
+  height: 25px;
   fill: currentColor;
 }
 
@@ -542,10 +640,19 @@ const lyricPreview = computed(() => {
 
 .primary-btn {
   min-height: 46px;
-  padding: 0 18px;
+  padding: 0 20px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #6d78ff, #835cff);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    linear-gradient(135deg, #37c9a7, #6d78ff 58%, #835cff);
   color: #fff;
+  box-shadow: 0 14px 28px rgba(55, 201, 167, 0.18);
+}
+
+.cta-secondary {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .highlight-grid {
@@ -571,6 +678,76 @@ const lyricPreview = computed(() => {
   display: block;
   margin-top: 8px;
   line-height: 1.5;
+}
+
+.career-card {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.career-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.career-top span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(55, 201, 167, 0.14);
+  color: #a9ffe8;
+  font-size: 0.82rem;
+}
+
+.career-card h3 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1.25;
+}
+
+.career-summary {
+  margin: 0;
+  line-height: 1.8;
+  color: rgba(248, 251, 255, 0.76);
+}
+
+.fact-list {
+  display: grid;
+  gap: 10px;
+}
+
+.fact-list div {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fact-list span {
+  color: rgba(248, 251, 255, 0.55);
+  font-size: 0.8rem;
+}
+
+.fact-list strong {
+  line-height: 1.5;
+}
+
+.career-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: rgba(248, 251, 255, 0.82);
+  line-height: 1.75;
+}
+
+.career-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .player-top,
@@ -667,6 +844,12 @@ const lyricPreview = computed(() => {
   gap: 18px;
 }
 
+.music-resume-block {
+  max-width: 920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 .lyric-stage {
   display: grid;
 }
@@ -698,7 +881,17 @@ const lyricPreview = computed(() => {
 
 .skill-card,
 .project-card {
+  position: relative;
+  overflow: hidden;
   padding: 24px;
+}
+
+.project-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #37c9a7, #6d78ff);
 }
 
 .skill-card h3,
@@ -735,15 +928,41 @@ const lyricPreview = computed(() => {
   color: rgba(248, 251, 255, 0.72);
 }
 
+.project-top span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(55, 201, 167, 0.12);
+  color: #b7ffeb;
+  font-size: 0.78rem;
+}
+
 .project-card p {
   line-height: 1.8;
 }
 
 .highlight-list {
+  display: grid;
+  gap: 10px;
   margin: 18px 0 0;
-  padding-left: 1.1rem;
+  padding-left: 0;
+  list-style: none;
   color: rgba(248, 251, 255, 0.82);
-  line-height: 1.8;
+  line-height: 1.7;
+}
+
+.highlight-list li {
+  position: relative;
+  padding-left: 34px;
+}
+
+.highlight-list li::before {
+  content: "0" var(--item-index);
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  color: #8ff0d5;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .split-grid {
@@ -798,12 +1017,16 @@ const lyricPreview = computed(() => {
 :global(.light) .project-card,
 :global(.light) .content-card {
   border-color: rgba(75, 95, 146, 0.12);
-  background: rgba(255, 255, 255, 0.7);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66)),
+    rgba(255, 255, 255, 0.7);
   box-shadow: 0 18px 40px rgba(99, 118, 170, 0.12);
 }
 
 :global(.light) .summary,
 :global(.light) .identity-copy h2,
+:global(.light) .career-summary,
+:global(.light) .career-list,
 :global(.light) .track-copy p,
 :global(.light) .track-copy span,
 :global(.light) .project-card p,
@@ -817,9 +1040,19 @@ const lyricPreview = computed(() => {
 :global(.light) .link-btn,
 :global(.light) .control-row button,
 :global(.light) .highlight-item,
+:global(.light) .fact-list div,
 :global(.light) .mini-link,
 :global(.light) .lyric-preview p {
   background: rgba(75, 95, 146, 0.08);
+}
+
+:global(.light) .career-top span {
+  background: rgba(20, 162, 128, 0.12);
+  color: #087864;
+}
+
+:global(.light) .fact-list span {
+  color: rgba(22, 32, 51, 0.55);
 }
 
 :global(.light) .contact-btn {
@@ -836,6 +1069,19 @@ const lyricPreview = computed(() => {
 
 :global(.light) .contact-btn:hover {
   border-color: rgba(109, 120, 255, 0.26);
+}
+
+:global(.light) .hero-status-row span {
+  border-color: rgba(75, 95, 146, 0.12);
+  background: rgba(75, 95, 146, 0.08);
+  color: rgba(22, 32, 51, 0.72);
+}
+
+:global(.light) .hero-status-row span:first-child,
+:global(.light) .project-top span {
+  border-color: rgba(55, 169, 145, 0.16);
+  background: rgba(55, 169, 145, 0.12);
+  color: #087864;
 }
 
 :global(.light) .email-popup {
@@ -893,6 +1139,7 @@ const lyricPreview = computed(() => {
   }
 
   .intro-card,
+  .career-card,
   .player-card,
   .content-card,
   .skill-card,
