@@ -3,7 +3,7 @@ import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
-import assistantHandler from "./api/assistant-handler.ts";
+import assistantHandler from "./api/assistant-handler";
 
 function readRequestBody(req: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {

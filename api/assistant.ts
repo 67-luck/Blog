@@ -1,4 +1,4 @@
-import handler from "./assistant-handler.ts";
+import handler from "./assistant-handler";
 
 export const config = {
   maxDuration: 60,
