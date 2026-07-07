@@ -23,8 +23,8 @@ function goBack() {
 .back-button {
   position: fixed;
   left: 24px;
-  top: 128px;
-  z-index: 58;
+  bottom: 24px;
+  z-index: 86;
   min-height: 42px;
   padding: 0 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -44,7 +44,7 @@ function goBack() {
 @media (max-width: 768px) {
   .back-button {
     left: 12px;
-    top: 152px;
+    bottom: 174px;
   }
 }
 </style>

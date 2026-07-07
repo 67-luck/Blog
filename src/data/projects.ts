@@ -7,7 +7,7 @@ export interface Project {
   id: string;
   name: string;
   period: string;
-  type: "实习项目" | "个人项目" | "学习沉淀";
+  type: "实习项目" | "个人项目";
   summary: string;
   role: string;
   techStack: string[];
@@ -89,25 +89,6 @@ export const projects: Project[] = [
     links: [
       { label: "在线博客", url: "https://67-lucks-projects.vercel.app/blog" },
       { label: "源码仓库", url: "https://github.com/67-luck" },
-    ],
-  },
-  {
-    id: "frontend-notes",
-    name: "前端学习笔记沉淀",
-    period: "持续维护",
-    type: "学习沉淀",
-    summary:
-      "围绕 Vue、JavaScript、Node.js、Axios、Webpack、工程化和项目复盘整理的学习笔记入口，用于沉淀前端基础和项目经验。",
-    role: "负责知识分类、笔记整理、外链组织和站内导航整合。",
-    techStack: ["Vue", "JavaScript", "Node.js", "Axios", "Webpack", "Markdown"],
-    highlights: [
-      "按技术栈维度整理知识入口，降低复习和面试准备时的查找成本。",
-      "将项目经验与学习笔记关联，方便讲清技术选型、难点和优化方向。",
-      "持续记录问题解决过程，包括接口联调、权限控制、部署和性能优化。",
-    ],
-    links: [
-      { label: "语雀主页", url: "https://www.yuque.com/" },
-      { label: "GitHub", url: "https://github.com/67-luck" },
     ],
   },
 ];
