@@ -174,32 +174,238 @@ function resolveModel(requestedModel?: string) {
   );
 }
 
-function extractResponseText(data: Record<string, any>) {
-  const choice = data?.choices?.[0];
-  const message = choice?.message;
-  const content = message?.content;
-
-  if (typeof content === "string" && content.trim()) {
-    return content.trim();
+function extractTextContent(value: any): string {
+  if (typeof value === "string") {
+    return value.trim();
   }
 
-  if (Array.isArray(content)) {
-    return content
-      .map((item: Record<string, any>) => item?.text ?? "")
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => extractTextContent(item))
       .join("")
       .trim();
   }
 
-  if (typeof choice?.text === "string" && choice.text.trim()) {
-    return choice.text.trim();
+  if (!value || typeof value !== "object") {
+    return "";
   }
 
-  if (typeof data.output_text === "string" && data.output_text.trim()) {
-    return data.output_text.trim();
+  if (typeof value.text === "string") {
+    return value.text;
   }
 
-  if (typeof data.text === "string" && data.text.trim()) {
-    return data.text.trim();
+  if (typeof value.output_text === "string") {
+    return value.output_text;
+  }
+
+  if (typeof value.value === "string" && /text/i.test(String(value.type ?? ""))) {
+    return value.value;
+  }
+
+  if (value.content) {
+    return extractTextContent(value.content);
+  }
+
+  return "";
+}
+
+function extractResponseText(data: Record<string, any>) {
+  for (const choice of data?.choices ?? []) {
+    const text =
+      extractTextContent(choice?.message?.content) ||
+      extractTextContent(choice?.delta?.content) ||
+      extractTextContent(choice?.text) ||
+      extractTextContent(choice?.message?.text) ||
+      extractTextContent(choice?.message?.output_text);
+
+    if (text) {
+      return text;
+    }
+  }
+
+  const directText = extractTextContent(data.output_text) || extractTextContent(data.text);
+
+  if (directText) {
+    return directText;
+  }
+
+  if (Array.isArray(data.output)) {
+    const outputText = data.output
+      .map((item: Record<string, any>) => extractTextContent(item?.content) || extractTextContent(item))
+      .join("")
+      .trim();
+
+    if (outputText) {
+      return outputText;
+    }
+  }
+
+  return "";
+}
+
+function getProviderError(data: Record<string, any>, fallback = PROVIDER_ERROR_TEXT) {
+  const error = data?.error;
+
+  if (typeof error === "string" && error.trim()) {
+    return error.trim();
+  }
+
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  if (typeof data?.message === "string" && data.message.trim()) {
+    return data.message.trim();
+  }
+
+  return fallback;
+}
+
+function formatProviderError(provider: ModelProvider, status: number, data: Record<string, any>) {
+  const code = data?.error?.code || data?.code || "provider_request_failed";
+  return `${provider.name} ${status} ${code}: ${getProviderError(data)}`;
+}
+
+function getLastUserQuestion(body: AssistantBody) {
+  const messages = body.messages ?? [];
+
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+
+    if (message?.role === "user" && message.text?.trim()) {
+      return message.text.trim();
+    }
+  }
+
+  return "";
+}
+
+function pickField(block: string, labels: string[]) {
+  const lines = block.split(/\r?\n/);
+
+  for (const label of labels) {
+    const line = lines.find((item) => item.trim().startsWith(`${label}：`));
+
+    if (line) {
+      return line.slice(line.indexOf("：") + 1).trim();
+    }
+  }
+
+  return "";
+}
+
+function getContextBlocks(siteContext: string, labels: string[]) {
+  return siteContext
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter((block) => labels.some((label) => block.includes(`${label}：`)));
+}
+
+function buildProjectFallback(siteContext: string) {
+  const blocks = getContextBlocks(siteContext, ["项目"]).slice(0, 3);
+
+  if (!blocks.length) {
+    return "";
+  }
+
+  const items = blocks
+    .map((block) => {
+      const name = pickField(block, ["项目"]) || "项目";
+      const summary = pickField(block, ["简介"]);
+      const role = pickField(block, ["职责"]);
+      const techStack = pickField(block, ["技术栈"]);
+      const highlights = pickField(block, ["亮点"]);
+      const details = [
+        summary,
+        role ? `负责内容：${role}` : "",
+        techStack ? `技术栈：${techStack}` : "",
+        highlights ? `亮点：${highlights}` : "",
+      ].filter(Boolean);
+
+      return `- ${name}：${details.join("；")}`;
+    })
+    .join("\n");
+
+  return `可以，下面是站内项目概览：\n${items}`;
+}
+
+function buildNotesFallback(siteContext: string) {
+  const blocks = getContextBlocks(siteContext, ["笔记"]).slice(0, 4);
+
+  if (!blocks.length) {
+    return "";
+  }
+
+  const items = blocks
+    .map((block) => {
+      const title = pickField(block, ["笔记"]) || "学习笔记";
+      const category = pickField(block, ["分类"]);
+      const summary = pickField(block, ["摘要"]);
+      const tags = pickField(block, ["标签"]);
+      const details = [category ? `分类：${category}` : "", summary, tags ? `标签：${tags}` : ""].filter(Boolean);
+
+      return `- ${title}：${details.join("；")}`;
+    })
+    .join("\n");
+
+  return `可以，下面是站内学习笔记概览：\n${items}`;
+}
+
+function buildBlogFallback(siteContext: string) {
+  const blocks = getContextBlocks(siteContext, ["文章"]).slice(0, 3);
+
+  if (!blocks.length) {
+    return "";
+  }
+
+  const items = blocks
+    .map((block) => {
+      const title = pickField(block, ["文章"]) || "文章";
+      const date = pickField(block, ["日期"]);
+      const summary = pickField(block, ["摘要"]);
+      const details = [date ? `日期：${date}` : "", summary].filter(Boolean);
+
+      return `- ${title}：${details.join("；")}`;
+    })
+    .join("\n");
+
+  return `可以，下面是站内文章概览：\n${items}`;
+}
+
+function buildContactFallback(siteContext: string) {
+  const line = siteContext
+    .split(/\r?\n/)
+    .find((item) => item.includes("联系方式：") || item.includes("联系方式:"));
+
+  if (!line) {
+    return "";
+  }
+
+  return line.replace(/^.*?联系方式[：:]/, "联系方式：").trim();
+}
+
+function buildLocalFallbackAnswer(body: AssistantBody) {
+  const siteContext = body.siteContext ?? "";
+  const question = getLastUserQuestion(body);
+
+  if (!siteContext.trim() || !question) {
+    return "";
+  }
+
+  if (/项目|作品|经历/.test(question)) {
+    return buildProjectFallback(siteContext);
+  }
+
+  if (/笔记|学习|路线/.test(question)) {
+    return buildNotesFallback(siteContext);
+  }
+
+  if (/文章|博客|总结/.test(question)) {
+    return buildBlogFallback(siteContext);
+  }
+
+  if (/联系|邮箱|电话|github|语雀/i.test(question)) {
+    return buildContactFallback(siteContext);
   }
 
   return "";
@@ -229,6 +435,7 @@ async function requestCompletion(
 
   return {
     data,
+    error: response.ok ? "" : formatProviderError(provider, response.status, data),
     response,
     text: response.ok ? extractResponseText(data) : "",
   };
@@ -261,7 +468,7 @@ async function streamCompletion(
     return {
       ok: false,
       status: response.status,
-      error: data?.error?.message ?? PROVIDER_ERROR_TEXT,
+      error: formatProviderError(provider, response.status, data),
       code: data?.error?.code ?? "provider_request_failed",
       hadContent: false,
       hadReasoning: false,
@@ -302,11 +509,9 @@ async function streamCompletion(
         const data = JSON.parse(payload) as Record<string, any>;
         const delta = data?.choices?.[0]?.delta ?? {};
         const text =
-          typeof delta.content === "string"
-            ? delta.content
-            : typeof data?.choices?.[0]?.message?.content === "string"
-              ? data.choices[0].message.content
-              : "";
+          extractTextContent(delta.content) ||
+          extractTextContent(data?.choices?.[0]?.message?.content) ||
+          extractTextContent(data?.choices?.[0]?.text);
 
         if (text) {
           hadContent = true;
@@ -335,14 +540,21 @@ async function streamCompletion(
 async function resolveFallbackText(
   providers: ModelProvider[],
   messages: Array<{ role: string; content: string }>,
+  body: AssistantBody,
 ) {
+  const errors: string[] = [];
+  let sawSuccessfulProvider = false;
+
   for (const provider of providers) {
     let completion = await requestCompletion(provider, reinforceFinalAnswer(messages));
     let { response, text } = completion;
 
     if (!response.ok) {
+      errors.push(completion.error);
       continue;
     }
+
+    sawSuccessfulProvider = true;
 
     if (!text) {
       completion = await requestCompletion(provider, [
@@ -358,11 +570,28 @@ async function resolveFallbackText(
 
       response = completion.response;
       text = completion.text;
+
+      if (!response.ok) {
+        errors.push(completion.error);
+        continue;
+      }
+
+      sawSuccessfulProvider = true;
     }
 
     if (response.ok && text) {
       return text;
     }
+  }
+
+  const localFallback = buildLocalFallbackAnswer(body);
+
+  if (localFallback) {
+    return localFallback;
+  }
+
+  if (!sawSuccessfulProvider && errors.length) {
+    throw new Error(errors.at(-1) || PROVIDER_ERROR_TEXT);
   }
 
   return FALLBACK_TEXT;
@@ -512,6 +741,7 @@ async function handleAssistant(req: JsonRequest, res: JsonResponse) {
 
       let wroteText = false;
       let hasCompleted = false;
+      const streamErrors: string[] = [];
 
       for (const provider of providers) {
         let result = await streamCompletion(provider, messages, (chunk) => {
@@ -524,6 +754,10 @@ async function handleAssistant(req: JsonRequest, res: JsonResponse) {
           break;
         }
 
+        if (!result.ok && result.error) {
+          streamErrors.push(result.error);
+        }
+
         result = await streamCompletion(provider, reinforceFinalAnswer(messages), (chunk) => {
           wroteText = true;
           res.write?.(chunk);
@@ -533,10 +767,27 @@ async function handleAssistant(req: JsonRequest, res: JsonResponse) {
           hasCompleted = true;
           break;
         }
+
+        if (!result.ok && result.error) {
+          streamErrors.push(result.error);
+        }
       }
 
       if (!hasCompleted || !wroteText) {
-        const fallbackText = await resolveFallbackText(providers, messages);
+        let fallbackText = "";
+
+        try {
+          fallbackText = await resolveFallbackText(providers, messages, {
+            ...body,
+            siteContext,
+          });
+        } catch (error) {
+          fallbackText =
+            error instanceof Error
+              ? `AI 服务请求失败：${error.message}`
+              : `AI 服务请求失败：${streamErrors.at(-1) || PROVIDER_ERROR_TEXT}`;
+        }
+
         await writeTextInChunks(fallbackText, (chunk) => res.write?.(chunk));
       }
 
@@ -565,7 +816,10 @@ async function handleAssistant(req: JsonRequest, res: JsonResponse) {
     }
 
     res.status(200).json({
-      text: await resolveFallbackText(providers, messages),
+      text: await resolveFallbackText(providers, messages, {
+        ...body,
+        siteContext,
+      }),
     });
   } catch (error) {
     console.error(error);
